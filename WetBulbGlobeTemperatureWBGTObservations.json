@@ -1,0 +1,310 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Real-time API weather services",
+    "description": "Real-time API documentation of weather services",
+    "contact": {
+      "email": "feedback@data.gov.sg"
+    },
+    "version": "1.0.11"
+  },
+  "servers": [
+    {
+      "url": "https://api-open.data.gov.sg/v2/real-time/api"
+    }
+  ],
+  "paths": {
+    "/weather": {
+      "get": {
+        "summary": "Retrieve the latest WBGT data for accurate heat stress assessment",
+        "description": "**[https://api-open.data.gov.sg/v2/real-time/api/weather?api=wbgt](https://api-open.data.gov.sg/v2/real-time/api/weather?api=wbgt)**\n\n<br/>\n\n- Filter for specific date or date-time by providing `date` in query parameter.\n  - use YYYY-MM-DD format to retrieve all of the readings for that day\n  - use YYYY-MM-DDTHH:mm:ss to retrieve the latest readings at that moment in time\n  - example: `?date=2025-01-16` or `?date=2025-01-16T23:59:00`\n\n<br/>\n\n- If `date` is not provided in query parameter, API will return the latest WBGT observation\n\n<br/>\n\n- Unit of measure for readings is `°C`\n\n<br/>\n\n- WBGT readings are provided for 15 stations, including **Upper Changi Road North**, **Tuas Terminal Gateway**, and **Punggol North**.  Full list of station IDs and names is available in the response schema.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "api",
+            "description": "Set the value to `wbgt` to fetch WBGT records",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "wbgt"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "description": "SGT date (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS). Example: 2025-01-16 or 2025-01-16T23:59:00",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "paginationToken",
+            "description": "Pagination token for retrieving subsequent data pages (only exists when there is a next page available for requests with date filters)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "API key for higher rate limits (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "WBGT Weather Observations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Response status code (always 0 for success)"
+                    },
+                    "errorMsg": {
+                      "type": "string",
+                      "description": "Error message (empty string for success)",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "records": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "datetime": {
+                                "type": "string",
+                                "example": "2025-02-07T20:38:00+08:00",
+                                "description": "Time the observasation was issued by NEA"
+                              },
+                              "item": {
+                                "type": "object",
+                                "description": "A weather observation for the WBGT",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "description": "Type of the weather information (`observation` or `forecast`). WBGT is always `observation.",
+                                    "example": "observation"
+                                  },
+                                  "isStationData": {
+                                    "type": "boolean",
+                                    "description": "Indicates whether the weather information includes station information.",
+                                    "example": true
+                                  },
+                                  "readings": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "station": {
+                                          "type": "object",
+                                          "properties": {
+                                            "name": {
+                                              "type": "string",
+                                              "description": "Station name",
+                                              "enum": [
+                                                "Bukit Timah (West)",
+                                                "Tuas Terminal Gateway",
+                                                "Choa Chu Kang Stadium",
+                                                "Yio Chu Kang Stadium",
+                                                "Sentosa Palawan Green",
+                                                "Punggol North",
+                                                "Upper Changi Road North",
+                                                "Woodlands Street 13",
+                                                "Old Chua Chu Kang Road",
+                                                "Stadium Road",
+                                                "Bishan Street",
+                                                "Bedok North Street 2",
+                                                "West Coast Road",
+                                                "Jurong West Street 93",
+                                                "Sakra Road"
+                                              ],
+                                              "example": "Upper Changi Road North"
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "description": "Station ID",
+                                              "enum": [
+                                                "S187",
+                                                "S139",
+                                                "S140",
+                                                "S141",
+                                                "S142",
+                                                "S143",
+                                                "S124",
+                                                "S125",
+                                                "S126",
+                                                "S127",
+                                                "S128",
+                                                "S129",
+                                                "S130",
+                                                "S132",
+                                                "S137"
+                                              ],
+                                              "example": "S124"
+                                            },
+                                            "townCenter": {
+                                              "type": "string",
+                                              "example": "Changi"
+                                            }
+                                          }
+                                        },
+                                        "heatStress": {
+                                          "type": "string",
+                                          "description": "A string indicating the level of heat stress at the location",
+                                          "example": "Low"
+                                        },
+                                        "location": {
+                                          "type": "object",
+                                          "properties": {
+                                            "latitude": {
+                                              "type": "string",
+                                              "description": "The latitude coordinate of the location, represented as a string.",
+                                              "example": "1.1700"
+                                            },
+                                            "longtitude": {
+                                              "type": "string",
+                                              "description": "The longitude coordinate of the location, represented as a string.",
+                                              "example": "103.8718"
+                                            }
+                                          }
+                                        },
+                                        "wbgt": {
+                                          "type": "string",
+                                          "description": "Wet Bulb Globe Temperature value at the station",
+                                          "example": "26.9"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "updatedTimestamp": {
+                                "type": "string",
+                                "description": "Time of acquisition of data from NEA",
+                                "example": "2025-02-07T20:40:12+08:00"
+                              }
+                            }
+                          }
+                        },
+                        "paginationToken": {
+                          "type": "string",
+                          "description": "Token to retrieve next page if exists",
+                          "example": "b2Zmc2V0PTEwMA== (you will see this token only if next page exists)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid HTTP request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 4
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "ERROR_PARAMS"
+                    },
+                    "data": {
+                      "type": "object",
+                      "example": null
+                    },
+                    "errorMsg": {
+                      "type": "string",
+                      "enum": [
+                        "Invalid date format. Date format must be YYYY-MM-DD (2025-02-01) or YYYY-MM-DDTHH:mm:ss (2025-02-01T08:30:00).",
+                        "Invalid pagination token."
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Weather data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 17
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "REAL_TIME_API_DATA_NOT_FOUND"
+                    },
+                    "data": {
+                      "type": "object",
+                      "example": null
+                    },
+                    "errorMsg": {
+                      "type": "string",
+                      "example": "Data not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 24
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "TOO_MANY_REQUESTS"
+                    },
+                    "data": {
+                      "type": "object",
+                      "example": null
+                    },
+                    "errorMsg": {
+                      "type": "string",
+                      "example": "Rate limit exceeded"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  }
+}
