@@ -2,13 +2,6 @@
 
 > **A Prototype for mitigating Urban Heat Island (UHI) exposure for bike and cycle riders in Singapore.**
 
-## 📋 Table of Contents
-1. [Project Overview](#project-overview)
-2. [Key Features](#key-features)
-3. [Data Sources](#data-sources)
-4. [How to Run](#how-to-run)
-5. [Contributors](#contributors)
-
 ## 🌍 Project Overview
 CoolRide is an intelligent routing engine that prioritizes **thermal safety** over speed. Unlike Google Maps, which optimizes for distance, CoolRide calculates the **Wet Bulb Globe Temperature (WBGT)** exposure and finds routes that maximize shade coverage using Park Connectors (PCN) and urban tree canopy data.
 
