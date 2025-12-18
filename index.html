@@ -1,26 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CoolRide Monitor (Leaflet)</title>
+    <title>CoolRide Monitor (Smart Colors)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <style>
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        
-        /* The Floating Panel */
         #panel {
-            position: absolute;
-            top: 20px; right: 20px;
-            width: 250px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            z-index: 1000; /* Stays on top of map */
+            position: absolute; top: 20px; right: 20px; width: 250px;
+            background: white; padding: 15px; border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2); z-index: 1000;
             font-family: sans-serif;
         }
         h2 { margin: 0 0 10px; font-size: 18px; color: #2c3e50; }
@@ -29,53 +20,55 @@
     </style>
 </head>
 <body>
-
     <div id="panel">
         <h2>🚴 CoolRide Live</h2>
         <div id="status">Waiting for data...</div>
         <hr>
-        <div class="legend-item"><span class="dot" style="background:red;"></span>Fast Route (Hot)</div>
-        <div class="legend-item"><span class="dot" style="background:green;"></span>Cool Route (Shaded)</div>
+        <div class="legend-item"><span class="dot" style="background:red;"></span>Fastest (Standard)</div>
+        <div class="legend-item"><span class="dot" style="background:green;"></span>Cool / Optimal</div>
     </div>
-
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
 
     <script>
-        // A. Initialize Map (Centered on Tampines)
         var map = L.map('map').setView([1.3521, 103.94], 14);
-
-        // B. Add OpenStreetMap Layer (The Free Map Tiles)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
+            maxZoom: 19, attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // C. Load Your KML File
-        // We look for the file inside the output folder.
-        var kmlLayer = omnivore.kml('output/latest_route.kml')
+        // 🎨 CUSTOM STYLE FUNCTION
+        // This forces Leaflet to use Red/Green based on the route name
+        var customLayer = L.geoJson(null, {
+            style: function(feature) {
+                var name = feature.properties.name || "";
+                if (name.includes("Fastest")) {
+                    return { color: "red", weight: 5, opacity: 0.7 };
+                } else if (name.includes("Cool") || name.includes("Optimal")) {
+                    return { color: "green", weight: 5, opacity: 0.8 };
+                } else {
+                    return { color: "blue", weight: 3 }; // Fallback
+                }
+            }
+        });
+
+        // Load with the custom style layer
+        var kmlLayer = omnivore.kml('output/latest_route.kml', null, customLayer)
             .on('ready', function() {
-                // When loaded, zoom the map to show the whole route
                 map.fitBounds(kmlLayer.getBounds());
                 document.getElementById('status').innerHTML = "✅ <b>Data Loaded</b><br>Source: latest_route.kml";
-                
-                // Add popups to the lines
                 this.eachLayer(function(layer) {
-                    // Try to read KML description if available
                     if (layer.feature && layer.feature.properties.description) {
                         layer.bindPopup(layer.feature.properties.description);
                     }
                 });
             })
             .on('error', function(e) {
-                document.getElementById('status').innerHTML = "⚠️ <b>Load Error</b><br>Is the server running?";
+                document.getElementById('status').innerHTML = "⚠️ <b>Load Error</b><br>Check output folder";
                 console.error(e);
             })
             .addTo(map);
-
     </script>
 </body>
 </html>
