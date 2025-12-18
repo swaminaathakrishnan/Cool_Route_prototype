@@ -12,7 +12,7 @@ CoolRide is an intelligent routing engine that prioritizes **thermal safety** ov
 * **Fail-Safe Protocol:** Includes a "Government Override" mode to force maximum safety during national heatwave alerts.
 
 ## 📊 Data Sources
-* **Weather:** [National Environment Agency (NEA) API](https://data.gov.sg/)
+* **Weather:** [National Environment Agency (NEA) API]([https://data.gov.sg/](https://data.gov.sg/datasets?formats=API&sort=relevancy&query=wbgt&resultId=d_87884af1f85d702d4f74c6af13b4853d))
 * **Road Network:** OpenStreetMap (via OSMnx)
 * **Vegetation:** [Trees.sg](https://exploretrees.sg/) (Processed via SGTrees)
 * **Infrastructure:** NParks Park Connector Network (GeoJSON)
