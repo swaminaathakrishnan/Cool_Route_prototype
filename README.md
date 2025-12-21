@@ -24,4 +24,4 @@ CoolRide is an intelligent routing engine that prioritizes **thermal safety** ov
 4.  Upload the KML to Google My Maps for visualization.
 
 ## 👥 Team
-* **Maintainer:** Swaminaatha Krishnan
+* **Maintainer:** Swaminaatha Krishnan, Arishya Jindal
