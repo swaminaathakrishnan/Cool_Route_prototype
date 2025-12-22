@@ -21,7 +21,7 @@ It uses a "Blue-Green-Grey" infrastructure approach, prioritizing **Park Connect
 
 ### 📂 Project Structure
 
-The repository is organized into two main components: the Geospatial Engine (Python) and the User Interface (ASP.NET Core).
+The repository is organized into two main components:
 
 ```text
 Cool_Route_prototype/
@@ -38,12 +38,6 @@ Cool_Route_prototype/
 └── README.md                    # Project Documentation
 ```
 
-### 🏗️ Architecture
-The system operates as a Hybrid Cloud application:
-
-* **The Brain (Python/Colab)**: Processes geospatial data (OSM, Trees, Buildings) and runs the routing algorithm. It pushes the calculated route (latest_route.kml) to the ```output/``` folder in this repository.
-
-* **The Interface (ASP.NET Core)**: A secure web application that handles user registration/login and renders the live route on an interactive Leaflet.js map by fetching the KML file from GitHub.
 
 ### 📊 Data Sources
 * Weather: National Environment Agency (NEA) API ([Real-time WBGT](https://data.gov.sg/datasets?query=wbgt&resultId=d_87884af1f85d702d4f74c6af13b4853d))
@@ -71,9 +65,7 @@ The system operates as a Hybrid Cloud application:
 
 * View the Route:
 
-* * Option A (Web App): The ASP.NET web app automatically pulls the latest route.
-
-* * Option B (Manual): Download latest_route.kml and view it in index.html (Leaflet Viewer) or Google My Maps.
+* * Download latest_route.kml and view it in index.html (Leaflet Viewer) or Google My Maps.
 
 ### 👥 Team
 * Swaminaatha Krishnan
