@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoolRide V8.2: Live Demo</title>
+    <title>CoolRide V9.0: Global Edition</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500&family=Noto+Sans+Tamil:wght@500&display=swap" rel="stylesheet">
     
     <style>
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
+        
+        /* PANEL */
         #panel {
             position: absolute; top: 20px; left: 20px; width: 360px;
             background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(12px);
@@ -17,16 +20,57 @@
             z-index: 1000; border: 1px solid rgba(0,0,0,0.05);
             display: flex; flex-direction: column; gap: 12px;
             max-height: 90vh; overflow-y: auto;
+            transition: all 0.3s ease;
         }
-        label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: -8px;}
-        input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter';}
-        button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;}
-        button:hover { background: #1d4ed8; }
-        
-        .stop-container { display: none; background: #f0f9ff; padding: 10px; border-radius: 8px; border: 1px dashed #2563eb; }
-        .stop-label { font-size: 11px; color: #2563eb; font-weight: 700; display: flex; justify-content: space-between; }
-        .remove-stop { cursor: pointer; color: #ef4444; }
 
+        /* TYPOGRAPHY */
+        label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: -8px;}
+        input, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter'; font-size: 14px;}
+        
+        /* BUTTONS */
+        .primary-btn { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white; border: none; padding: 14px; border-radius: 8px; 
+            cursor: pointer; font-weight: 600; transition: transform 0.1s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .primary-btn:hover { transform: translateY(-1px); }
+        .primary-btn:active { transform: translateY(0); }
+
+        /* DOWNLOAD BUTTON (FLOATING) */
+        #downloadBtn {
+            position: absolute; bottom: 30px; right: 30px;
+            background: white; color: #334155;
+            padding: 12px 20px; border-radius: 50px;
+            font-weight: 600; font-size: 13px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000; border: 1px solid #e2e8f0;
+            display: none; cursor: pointer;
+            align-items: center; gap: 8px;
+            transition: all 0.2s;
+        }
+        #downloadBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,0,0,0.2); }
+
+        /* HEADER & LANG */
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .lang-select { width: auto; padding: 4px 8px; font-size: 11px; border-radius: 6px; background: #f1f5f9; border: none; cursor: pointer;}
+
+        /* CALLOUT / ONBOARDING */
+        .callout {
+            background: #eff6ff; border-left: 4px solid #3b82f6;
+            padding: 10px; border-radius: 4px; font-size: 12px;
+            color: #1e40af; margin-bottom: 5px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .callout-close { cursor: pointer; opacity: 0.5; font-size: 14px; margin-left: 8px; }
+        .callout-close:hover { opacity: 1; }
+
+        /* STOP BOX */
+        .stop-container { display: none; background: #fff1f2; padding: 10px; border-radius: 8px; border: 1px dashed #f43f5e; }
+        .stop-label { font-size: 11px; color: #be123c; font-weight: 700; display: flex; justify-content: space-between; }
+        .remove-stop { cursor: pointer; text-decoration: underline; }
+
+        /* AI CARD */
         .ai-card { display: none; margin-top: 5px; background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; }
         .ai-title { font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; margin-bottom: 8px; }
         .ai-stats { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -35,49 +79,66 @@
         .ai-forecast-temp { font-size: 16px; font-weight: 600; color: #64748b; }
         .ai-insight-box { font-size: 12px; line-height: 1.4; color: #334155; padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #cbd5e1; }
         
+        /* EMOJI MARKERS */
         .emoji-icon { font-size: 24px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
     </style>
 </head>
 <body>
 
     <div id="panel">
-        <h2 style="margin:0 0 5px 0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V8.2</span></h2>
+        <div class="header-row">
+            <h2 style="margin:0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V9.0</span></h2>
+            <select class="lang-select" onchange="changeLanguage(this.value)">
+                <option value="en">🇬🇧 English</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ta">🇮🇳 தமிழ்</option>
+            </select>
+        </div>
+
+        <div id="onboarding" class="callout">
+            <span data-lang="welcome_msg">👋 <b>New to CoolRide?</b> Try searching "Bedok Reservoir" to see our water-cooling AI in action!</span>
+            <span class="callout-close" onclick="document.getElementById('onboarding').style.display='none'">✕</span>
+        </div>
         
         <input type="text" id="apiUrl" placeholder="🔌 Paste Ngrok URL Here" style="font-family:monospace; font-size:11px; background:#f8fafc;">
         
-        <label>📍 Start Point</label>
+        <label data-lang="start">📍 Start Point</label>
         <input type="text" id="start" value="Tampines MRT">
         
         <div id="stopBox" class="stop-container">
-            <div class="stop-label">🛑 ADDED STOP <span class="remove-stop" onclick="removeStop()">✕ Remove</span></div>
-            <input type="text" id="stop" placeholder="Coordinates" readonly style="background:transparent; border:none; font-weight:600; color:#1e293b;">
+            <div class="stop-label"><span data-lang="added_stop">🛑 ADDED STOP</span> <span class="remove-stop" onclick="removeStop()">✕ Remove</span></div>
+            <input type="text" id="stop" placeholder="Coordinates" readonly style="background:transparent; border:none; font-weight:600; color:#881337;">
             <input type="hidden" id="stopCoords"> 
         </div>
 
-        <label>🎯 Destination</label>
+        <label data-lang="dest">🎯 Destination</label>
         <input type="text" id="end" value="Tampines Eco Green">
         
-        <label>⏰ Departure Time</label>
+        <label data-lang="time">⏰ Departure Time</label>
         <input type="time" id="time" value="14:00">
         
-        <button id="btn-route" onclick="calculateRoute(true)">🚀 Find Cool Route</button>
-        <div id="status" style="text-align:center;font-size:13px;color:#64748b;margin-top:5px;">Ready</div>
+        <button id="btn-route" class="primary-btn" onclick="calculateRoute(true)" data-lang="btn_find">🚀 Find Cool Route</button>
+        <div id="status" style="text-align:center;font-size:13px;color:#64748b;margin-top:5px;" data-lang="status_ready">Ready to connect...</div>
 
         <div id="ai-card" class="ai-card">
-            <div class="ai-title">🤖 AI THERMAL FORECAST</div>
+            <div class="ai-title" data-lang="ai_title">🤖 AI THERMAL FORECAST</div>
             <div class="ai-stats">
                 <div>
                     <div class="ai-main-temp" id="ai-temp">--°C</div>
-                    <div class="ai-sub-text">Current Heat Stress</div>
+                    <div class="ai-sub-text" data-lang="ai_current">Current Heat Stress</div>
                 </div>
                 <div style="text-align:right;">
                     <div class="ai-forecast-temp" id="ai-forecast">--°C</div>
-                    <div class="ai-sub-text">Predicted (1h)</div>
+                    <div class="ai-sub-text" data-lang="ai_predict">Predicted (1h)</div>
                 </div>
             </div>
             <div id="ai-insight" class="ai-insight-box">AI analysis will appear here...</div>
         </div>
     </div>
+
+    <button id="downloadBtn" onclick="downloadKml()">
+        <span>⬇️</span> <span data-lang="btn_download">Download KML</span>
+    </button>
 
     <div id="map"></div>
 
@@ -89,38 +150,107 @@
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(map);
         var routeLayer = null;
 
-        // --- CACHING VARIABLES ---
-        var baseRouteData = null; // Saves the original "A to B" result
+        // --- GLOBAL VARIABLES ---
+        var baseRouteData = null; 
+        var lastKmlData = null; // Store KML for download
 
-        // Load URL
+        // --- TRANSLATION DICTIONARY ---
+        const translations = {
+            en: {
+                start: "📍 Start Point",
+                dest: "🎯 Destination",
+                time: "⏰ Departure Time",
+                btn_find: "🚀 Find Cool Route",
+                btn_download: "Download KML",
+                status_ready: "Ready to connect...",
+                status_compute: "⏳ Connecting to AI Brain...",
+                ai_title: "🤖 AI THERMAL FORECAST",
+                ai_current: "Current Heat Stress",
+                ai_predict: "Predicted (1h)",
+                added_stop: "🛑 ADDED STOP",
+                welcome_msg: "👋 <b>New to CoolRide?</b> Try searching 'Bedok Reservoir' to see our water-cooling AI in action!"
+            },
+            zh: {
+                start: "📍 起点",
+                dest: "🎯 终点",
+                time: "⏰ 出发时间",
+                btn_find: "🚀 寻找清凉路线",
+                btn_download: "下载 KML 文件",
+                status_ready: "准备连接...",
+                status_compute: "⏳ 正在连接 AI 大脑...",
+                ai_title: "🤖 AI 热量预测",
+                ai_current: "当前热应力",
+                ai_predict: "预测 (1小时后)",
+                added_stop: "🛑 已添加站点",
+                welcome_msg: "👋 <b>CoolRide 新手?</b> 尝试搜索 'Bedok Reservoir' 查看我们的水冷 AI！"
+            },
+            ta: {
+                start: "📍 தொடக்கப் புள்ளி",
+                dest: "🎯 சேருமிடம்",
+                time: "⏰ புறப்படும் நேரம்",
+                btn_find: "🚀 குளிர்ந்த பாதையை கண்டுபிடி",
+                btn_download: "KML பதிவிறக்கவும்",
+                status_ready: "இணைக்கத் தயாராக உள்ளது...",
+                status_compute: "⏳ AI உடன் இணைகிறது...",
+                ai_title: "🤖 AI வெப்ப முன்னறிவிப்பு",
+                ai_current: "தற்போதைய வெப்பம்",
+                ai_predict: "கணிப்பு (1 மணி)",
+                added_stop: "🛑 நிறுத்தம் சேர்க்கப்பட்டது",
+                welcome_msg: "👋 <b>CoolRide-க்கு புதியவரா?</b> எங்கள் நீர்-குளிரூட்டும் AI-ஐ காண 'Bedok Reservoir'-ஐ தேடவும்!"
+            }
+        };
+
+        function changeLanguage(lang) {
+            document.body.style.fontFamily = lang === 'en' ? "'Inter', sans-serif" : (lang === 'zh' ? "'Noto Sans SC', sans-serif" : "'Noto Sans Tamil', sans-serif");
+            
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                var key = el.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+        }
+
+        // --- LOCAL STORAGE ---
         var savedUrl = localStorage.getItem("coolride_api_url");
         if (savedUrl) document.getElementById("apiUrl").value = savedUrl;
         document.getElementById("apiUrl").addEventListener("input", function() {
             localStorage.setItem("coolride_api_url", this.value);
         });
 
+        // --- STOP MANAGEMENT ---
         window.addStop = function(coords, name) {
             document.getElementById("stopBox").style.display = "block";
             document.getElementById("stop").value = name;
             document.getElementById("stopCoords").value = coords;
-            calculateRoute(false); // 'false' = don't overwrite base cache
+            calculateRoute(false);
         };
 
         function removeStop() {
             document.getElementById("stopBox").style.display = "none";
             document.getElementById("stop").value = "";
             document.getElementById("stopCoords").value = "";
-            
-            // INSTANT RESTORE FROM CACHE
             if (baseRouteData) {
-                console.log("Restoring base route from cache...");
                 renderResult(baseRouteData);
-                document.getElementById("status").innerText = "✅ Restored Original Route (Cached)";
+                document.getElementById("status").innerText = "✅ Restored Original Route";
             } else {
                 calculateRoute(true);
             }
         }
 
+        // --- DOWNLOAD KML ---
+        window.downloadKml = function() {
+            if (!lastKmlData) return alert("No route generated yet!");
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/xml;charset=utf-8,' + encodeURIComponent(lastKmlData));
+            element.setAttribute('download', "cool_route.kml");
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        };
+
+        // --- MAIN LOGIC ---
         async function calculateRoute(isBaseRoute) {
             var url = document.getElementById("apiUrl").value.trim();
             if (url.endsWith('/')) url = url.slice(0, -1);
@@ -128,12 +258,14 @@
 
             var btn = document.getElementById("btn-route");
             var status = document.getElementById("status");
+            var lang = document.querySelector(".lang-select").value;
             
             btn.disabled = true;
             btn.innerText = "Computing...";
-            status.innerText = "⏳ Connecting to AI Brain...";
+            status.innerText = translations[lang].status_compute;
             
             if (routeLayer) map.removeLayer(routeLayer);
+            document.getElementById("downloadBtn").style.display = "none"; // Hide download while loading
 
             var payload = {
                 start: document.getElementById("start").value,
@@ -144,21 +276,16 @@
 
             try {
                 let response = await fetch(url + "/calculate_route", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
                 });
-
                 let result = await response.json();
 
                 if (result.status === "success") {
-                    // SAVE CACHE only if this is a Base Route (Start->End)
-                    if (isBaseRoute) {
-                        baseRouteData = result;
-                    }
+                    if (isBaseRoute) baseRouteData = result;
+                    lastKmlData = result.kml_data; // Store for download
                     renderResult(result);
                     btn.disabled = false;
-                    btn.innerText = "Find Cool Route";
+                    btn.innerText = translations[lang].btn_find;
                 } else { throw new Error(result.message); }
             } catch (error) {
                 console.error(error);
@@ -169,7 +296,6 @@
         }
 
         function renderResult(result) {
-            // Render KML
             var kmlBlob = new Blob([result.kml_data], {type: "text/xml"});
             var kmlUrl = URL.createObjectURL(kmlBlob);
 
@@ -181,22 +307,15 @@
                     return { color: "#3b82f6", weight: 4 };
                 },
                 pointToLayer: function(feature, latlng) {
-                    // ROBUST EMOJI CHECK (Checks Name AND Description)
                     var name = feature.properties.name || "";
                     var desc = feature.properties.description || "";
                     var text = (name + " " + desc).toLowerCase();
-                    
                     var iconHtml = "📍"; 
                     if (text.includes("🍜") || text.includes("hawker")) iconHtml = "🍜";
                     if (text.includes("🛒") || text.includes("supermarket")) iconHtml = "🛒";
 
                     return L.marker(latlng, {
-                        icon: L.divIcon({
-                            className: 'emoji-icon',
-                            html: iconHtml,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        })
+                        icon: L.divIcon({ className: 'emoji-icon', html: iconHtml, iconSize: [30, 30], iconAnchor: [15, 15] })
                     });
                 }
             });
@@ -210,7 +329,6 @@
                         }
                     });
 
-                    // Render AI Data
                     if (result.ai_data) {
                         var ai = result.ai_data;
                         document.getElementById("ai-card").style.display = "block";
@@ -224,10 +342,11 @@
                         insightBox.style.borderLeftColor = borderColor;
                     }
                     
-                    // Show Timer Status
-                    var duration = result.meta ? result.meta.duration : "Unknown";
-                    document.getElementById("status").innerText = "✅ Optimized Route Loaded (" + duration + ")";
+                    // Show Timer & Download Button
+                    var duration = result.meta ? result.meta.duration : "Cached";
+                    document.getElementById("status").innerText = "✅ Route Loaded (" + duration + ")";
                     document.getElementById("status").style.color = "green";
+                    document.getElementById("downloadBtn").style.display = "flex"; // Show button
                 })
                 .addTo(map);
         }
