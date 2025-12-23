@@ -3,139 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoolRide V7: Live Command Center</title>
-    
+    <title>CoolRide V7.4: Multi-Stop Routing</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
+        /* ... (Keep your existing styles) ... */
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        /* Fullscreen Map */
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
-        
-        /* Floating Control Panel */
         #panel {
-            position: absolute;
-            top: 20px; left: 20px;
-            width: 360px;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(12px);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-            z-index: 1000;
-            border: 1px solid rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            position: absolute; top: 20px; left: 20px; width: 360px;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(12px);
+            padding: 24px; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            z-index: 1000; border: 1px solid rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; gap: 12px;
         }
+        input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+        button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #1d4ed8; }
         
-        /* Header */
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .logo { font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
-        .badge { font-size: 10px; background: #22c55e; color: white; padding: 4px 8px; border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Server Connection Box */
-        .server-box {
-            background: #f1f5f9;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px dashed #cbd5e1;
-        }
-        .server-label { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px; display: block; }
-        .server-input {
-            width: 100%;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 8px;
-            font-size: 12px;
-            font-family: monospace;
-            box-sizing: border-box; 
-        }
-
-        /* Inputs */
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        label { font-size: 12px; font-weight: 600; color: #475569; }
-        input[type="text"], input[type="time"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-            box-sizing: border-box;
-        }
-        input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-
-        /* Action Button */
-        button {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
-        button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-        button:active { transform: translateY(0); }
-        button:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
-
-        /* Status Bar */
-        #status {
-            font-size: 13px;
-            text-align: center;
-            color: #64748b;
-            min-height: 20px;
-            font-weight: 500;
-        }
-        
-        /* Legend */
-        .legend { display: flex; gap: 12px; margin-top: 5px; justify-content: center; }
-        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475569; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; }
-
+        /* New Stop Field Style */
+        .stop-container { display: none; background: #f0f9ff; padding: 10px; border-radius: 8px; border: 1px dashed #2563eb; }
+        .stop-label { font-size: 11px; color: #2563eb; font-weight: 700; display: flex; justify-content: space-between; }
+        .remove-stop { cursor: pointer; color: #ef4444; }
     </style>
 </head>
 <body>
 
     <div id="panel">
-        <div class="header">
-            <div class="logo">🚴 CoolRide <span class="badge">Live</span></div>
-        </div>
-
-        <div class="server-box">
-            <span class="server-label">🔌 SERVER CONNECTION</span>
-            <input type="text" id="apiUrl" class="server-input" placeholder="Paste Ngrok URL (e.g., https://x-x-x.ngrok.app)">
-        </div>
-
-        <div class="form-group">
-            <label>📍 START POINT</label>
-            <input type="text" id="start" value="Tampines MRT" placeholder="Enter start location">
-        </div>
-
-        <div class="form-group">
-            <label>🎯 DESTINATION</label>
-            <input type="text" id="end" value="Tampines Eco Green" placeholder="Enter destination">
-        </div>
-
-        <div class="form-group">
-            <label>⏰ DEPARTURE TIME (SGT)</label>
-            <input type="time" id="time" value="14:00">
-        </div>
-
-        <button id="btn-route" onclick="calculateRoute()">Find Coolest Route</button>
+        <h2 style="margin:0 0 10px 0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V7.4</span></h2>
         
-        <div id="status">Ready to connect...</div>
-
-        <div class="legend">
-            <div class="legend-item"><div class="dot" style="background:#ef4444"></div>Fastest (Hot)</div>
-            <div class="legend-item"><div class="dot" style="background:#22c55e"></div>CoolRide (Shaded)</div>
+        <input type="text" id="apiUrl" placeholder="🔌 Paste Ngrok URL Here" style="font-family:monospace; font-size:11px; background:#f8fafc;">
+        
+        <label>📍 Start Point</label>
+        <input type="text" id="start" value="Tampines MRT">
+        
+        <div id="stopBox" class="stop-container">
+            <div class="stop-label">🛑 ADDED STOP <span class="remove-stop" onclick="removeStop()">✕ Remove</span></div>
+            <input type="text" id="stop" placeholder="Coordinates" readonly style="background:transparent; border:none; font-weight:600; color:#1e293b;">
+            <input type="hidden" id="stopCoords"> 
         </div>
+
+        <label>🎯 Destination</label>
+        <input type="text" id="end" value="Tampines Eco Green">
+        
+        <button id="btn-route" onclick="calculateRoute()">🚀 Find Cool Route</button>
+        <div id="status" style="text-align:center;font-size:13px;color:#64748b;margin-top:5px;">Ready</div>
     </div>
 
     <div id="map"></div>
@@ -144,94 +57,94 @@
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
 
     <script>
-        // --- 1. INITIALIZE MAP ---
         var map = L.map('map', {zoomControl: false}).setView([1.3521, 103.94], 14);
-        L.control.zoom({position: 'bottomright'}).addTo(map);
-        
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CartoDB',
-            maxZoom: 19
-        }).addTo(map);
-
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(map);
         var routeLayer = null;
 
-        // --- 2. THE ROUTING LOGIC ---
+        // 1. FUNCTION CALLED BY POPUP BUTTON
+        window.addStop = function(coords, name) {
+            document.getElementById("stopBox").style.display = "block";
+            document.getElementById("stop").value = name;
+            document.getElementById("stopCoords").value = coords;
+            
+            // Auto-trigger route recalculation
+            calculateRoute();
+        };
+
+        function removeStop() {
+            document.getElementById("stopBox").style.display = "none";
+            document.getElementById("stop").value = "";
+            document.getElementById("stopCoords").value = "";
+            calculateRoute();
+        }
+
+        // 2. MAIN ROUTING LOGIC
         async function calculateRoute() {
             var url = document.getElementById("apiUrl").value.trim();
+            if (url.endsWith('/')) url = url.slice(0, -1);
+            if (!url) return alert("⚠️ Please paste Server URL!");
+
             var btn = document.getElementById("btn-route");
             var status = document.getElementById("status");
-
-            // Validation
-            if (!url) {
-                status.innerText = "⚠️ Missing Server URL!";
-                status.style.color = "#ef4444";
-                return;
-            }
-            // Ensure no trailing slash
-            if (url.endsWith('/')) url = url.slice(0, -1);
-
-            // UI Loading State
+            
             btn.disabled = true;
-            btn.innerText = "Processing Thermal Data...";
-            status.innerText = "⏳ Sending request to AI Engine...";
-            status.style.color = "#d97706";
-
-            // Clean previous map data
+            btn.innerText = "Computing...";
+            status.innerText = "⏳ Connecting to AI Brain...";
+            
             if (routeLayer) map.removeLayer(routeLayer);
 
             var payload = {
                 start: document.getElementById("start").value,
                 end: document.getElementById("end").value,
-                time: document.getElementById("time").value
+                time: "14:00",
+                // Send stop if active
+                stop: document.getElementById("stopCoords").value || "" 
             };
 
             try {
-                // CALL THE PYTHON BACKEND
                 let response = await fetch(url + "/calculate_route", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error("Server Error: " + response.statusText);
-
                 let result = await response.json();
 
                 if (result.status === "success") {
-                    // PARSE KML RESPONSE
-                    var kmlString = result.kml_data;
-                    var kmlBlob = new Blob([kmlString], {type: "text/xml"});
+                    var kmlBlob = new Blob([result.kml_data], {type: "text/xml"});
                     var kmlUrl = URL.createObjectURL(kmlBlob);
 
-                    // Custom Style Logic
                     var customStyle = L.geoJson(null, {
                         style: function(f) {
                             var name = f.properties.name || "";
-                            if (name.includes("Fastest")) return { color: "#ef4444", weight: 5, opacity: 0.7 };
+                            if (name.includes("Fastest")) return { color: "#ef4444", weight: 5, opacity: 0.6 };
                             if (name.includes("Cool")) return { color: "#22c55e", weight: 6, opacity: 0.9 };
                             return { color: "#3b82f6", weight: 4 };
                         }
                     });
 
-                    // Render KML
                     routeLayer = omnivore.kml(kmlUrl, null, customStyle)
                         .on('ready', function() {
                             map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
-                            status.innerText = "✅ Route Calculated Successfully!";
-                            status.style.color = "#22c55e";
+                            
+                            // BIND POPUPS (Crucial for the 'Add Stop' button to work)
+                            this.eachLayer(function(layer) {
+                                if (layer.feature && layer.feature.properties.description) {
+                                    layer.bindPopup(layer.feature.properties.description);
+                                }
+                            });
+                            
+                            status.innerText = "✅ Optimized Route Loaded";
+                            status.style.color = "green";
                             btn.disabled = false;
-                            btn.innerText = "Find Coolest Route";
+                            btn.innerText = "Find Cool Route";
                         })
                         .addTo(map);
 
-                } else {
-                    throw new Error(result.message);
-                }
-
+                } else { throw new Error(result.message); }
             } catch (error) {
                 console.error(error);
-                status.innerText = "❌ Error: " + error.message;
-                status.style.color = "#ef4444";
+                status.innerText = "❌ " + error.message;
                 btn.disabled = false;
                 btn.innerText = "Try Again";
             }
