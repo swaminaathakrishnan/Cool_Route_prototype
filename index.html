@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoolRide V7.4: Multi-Stop Routing</title>
+    <title>CoolRide V7.6: Live Demo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* ... (Keep your existing styles) ... */
+        /* Keep existing styles */
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
         #panel {
@@ -18,11 +18,11 @@
             z-index: 1000; border: 1px solid rgba(0,0,0,0.05);
             display: flex; flex-direction: column; gap: 12px;
         }
-        input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
-        button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: -8px;}
+        input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter';}
+        button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;}
         button:hover { background: #1d4ed8; }
         
-        /* New Stop Field Style */
         .stop-container { display: none; background: #f0f9ff; padding: 10px; border-radius: 8px; border: 1px dashed #2563eb; }
         .stop-label { font-size: 11px; color: #2563eb; font-weight: 700; display: flex; justify-content: space-between; }
         .remove-stop { cursor: pointer; color: #ef4444; }
@@ -31,7 +31,7 @@
 <body>
 
     <div id="panel">
-        <h2 style="margin:0 0 10px 0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V7.4</span></h2>
+        <h2 style="margin:0 0 10px 0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V7.6</span></h2>
         
         <input type="text" id="apiUrl" placeholder="🔌 Paste Ngrok URL Here" style="font-family:monospace; font-size:11px; background:#f8fafc;">
         
@@ -47,6 +47,9 @@
         <label>🎯 Destination</label>
         <input type="text" id="end" value="Tampines Eco Green">
         
+        <label>⏰ Departure Time</label>
+        <input type="time" id="time" value="14:00">
+        
         <button id="btn-route" onclick="calculateRoute()">🚀 Find Cool Route</button>
         <div id="status" style="text-align:center;font-size:13px;color:#64748b;margin-top:5px;">Ready</div>
     </div>
@@ -61,13 +64,10 @@
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(map);
         var routeLayer = null;
 
-        // 1. FUNCTION CALLED BY POPUP BUTTON
         window.addStop = function(coords, name) {
             document.getElementById("stopBox").style.display = "block";
             document.getElementById("stop").value = name;
             document.getElementById("stopCoords").value = coords;
-            
-            // Auto-trigger route recalculation
             calculateRoute();
         };
 
@@ -78,7 +78,6 @@
             calculateRoute();
         }
 
-        // 2. MAIN ROUTING LOGIC
         async function calculateRoute() {
             var url = document.getElementById("apiUrl").value.trim();
             if (url.endsWith('/')) url = url.slice(0, -1);
@@ -96,8 +95,8 @@
             var payload = {
                 start: document.getElementById("start").value,
                 end: document.getElementById("end").value,
-                time: "14:00",
-                // Send stop if active
+                // READ TIME FROM INPUT
+                time: document.getElementById("time").value,
                 stop: document.getElementById("stopCoords").value || "" 
             };
 
@@ -126,14 +125,11 @@
                     routeLayer = omnivore.kml(kmlUrl, null, customStyle)
                         .on('ready', function() {
                             map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
-                            
-                            // BIND POPUPS (Crucial for the 'Add Stop' button to work)
                             this.eachLayer(function(layer) {
                                 if (layer.feature && layer.feature.properties.description) {
                                     layer.bindPopup(layer.feature.properties.description);
                                 }
                             });
-                            
                             status.innerText = "✅ Optimized Route Loaded";
                             status.style.color = "green";
                             btn.disabled = false;
