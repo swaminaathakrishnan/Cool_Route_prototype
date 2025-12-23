@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoolRide V7.6: Live Demo</title>
+    <title>CoolRide V8.0: AI Thermal Routing</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* Keep existing styles */
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
         #panel {
@@ -17,6 +16,7 @@
             padding: 24px; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
             z-index: 1000; border: 1px solid rgba(0,0,0,0.05);
             display: flex; flex-direction: column; gap: 12px;
+            max-height: 90vh; overflow-y: auto; /* Scroll if panel gets too tall */
         }
         label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: -8px;}
         input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter';}
@@ -26,12 +26,32 @@
         .stop-container { display: none; background: #f0f9ff; padding: 10px; border-radius: 8px; border: 1px dashed #2563eb; }
         .stop-label { font-size: 11px; color: #2563eb; font-weight: 700; display: flex; justify-content: space-between; }
         .remove-stop { cursor: pointer; color: #ef4444; }
+
+        /* AI Card Styles */
+        .ai-card {
+            display: none; /* Hidden by default */
+            margin-top: 5px; 
+            background: #f8fafc; 
+            border-radius: 12px; 
+            padding: 15px; 
+            border: 1px solid #e2e8f0;
+        }
+        .ai-title { font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .ai-stats { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .ai-main-temp { font-size: 24px; font-weight: 700; color: #1e293b; }
+        .ai-sub-text { font-size: 11px; color: #64748b; }
+        .ai-forecast-temp { font-size: 16px; font-weight: 600; color: #64748b; }
+        .ai-insight-box { 
+            font-size: 12px; line-height: 1.4; color: #334155; 
+            padding: 10px; background: white; border-radius: 6px; 
+            border-left: 4px solid #cbd5e1; 
+        }
     </style>
 </head>
 <body>
 
     <div id="panel">
-        <h2 style="margin:0 0 10px 0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V7.6</span></h2>
+        <h2 style="margin:0 0 5px 0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V8.0</span></h2>
         
         <input type="text" id="apiUrl" placeholder="🔌 Paste Ngrok URL Here" style="font-family:monospace; font-size:11px; background:#f8fafc;">
         
@@ -52,6 +72,26 @@
         
         <button id="btn-route" onclick="calculateRoute()">🚀 Find Cool Route</button>
         <div id="status" style="text-align:center;font-size:13px;color:#64748b;margin-top:5px;">Ready</div>
+
+        <div id="ai-card" class="ai-card">
+            <div class="ai-title">🤖 AI THERMAL FORECAST</div>
+            
+            <div class="ai-stats">
+                <div>
+                    <div class="ai-main-temp" id="ai-temp">--°C</div>
+                    <div class="ai-sub-text">Current Heat Stress</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="ai-forecast-temp" id="ai-forecast">--°C</div>
+                    <div class="ai-sub-text">Predicted (1h)</div>
+                </div>
+            </div>
+            
+            <div id="ai-insight" class="ai-insight-box">
+                AI analysis will appear here...
+            </div>
+        </div>
+
     </div>
 
     <div id="map"></div>
@@ -92,10 +132,12 @@
             
             if (routeLayer) map.removeLayer(routeLayer);
 
+            // Hide AI card while loading
+            document.getElementById("ai-card").style.display = "none";
+
             var payload = {
                 start: document.getElementById("start").value,
                 end: document.getElementById("end").value,
-                // READ TIME FROM INPUT
                 time: document.getElementById("time").value,
                 stop: document.getElementById("stopCoords").value || "" 
             };
@@ -130,10 +172,28 @@
                                     layer.bindPopup(layer.feature.properties.description);
                                 }
                             });
+                            
                             status.innerText = "✅ Optimized Route Loaded";
                             status.style.color = "green";
                             btn.disabled = false;
                             btn.innerText = "Find Cool Route";
+
+                            // --- POPULATE AI CARD ---
+                            if (result.ai_data) {
+                                var ai = result.ai_data;
+                                document.getElementById("ai-card").style.display = "block";
+                                document.getElementById("ai-temp").innerText = ai.current_temp + "°C";
+                                document.getElementById("ai-forecast").innerText = ai.forecast_temp + "°C";
+                                
+                                var insightBox = document.getElementById("ai-insight");
+                                insightBox.innerText = ai.insight;
+                                
+                                // Dynamic Border Color based on risk
+                                var borderColor = "#22c55e"; // Green default
+                                if (ai.color === "red") borderColor = "#ef4444";
+                                if (ai.color === "orange") borderColor = "#f59e0b";
+                                insightBox.style.borderLeftColor = borderColor;
+                            }
                         })
                         .addTo(map);
 
