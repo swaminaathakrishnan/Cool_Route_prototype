@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoolRide V9.5: Live Now</title>
+    <title>CoolRide V9.7: Markers & Toggles</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500&family=Noto+Sans+Tamil:wght@500&display=swap" rel="stylesheet">
@@ -21,24 +21,15 @@
             max-height: 90vh; overflow-y: auto; transition: all 0.3s ease;
         }
 
-        /* SEARCH SUGGESTIONS */
         datalist { display: none; }
-
-        /* BUTTONS */
-        #openBtn {
-            position: absolute; top: 20px; left: 20px;
-            background: white; padding: 12px; border-radius: 12px;
-            font-weight: 700; font-size: 20px; line-height: 1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 999; border: 1px solid #e2e8f0;
-            cursor: pointer; display: none; 
-        }
         
+        /* HEADER */
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .header-controls { display: flex; gap: 8px; align-items: center; }
         .close-btn { cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 18px; padding: 4px 8px; border-radius: 6px;}
         .close-btn:hover { background: #f1f5f9; color: #ef4444; }
 
+        /* INPUTS */
         label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: -8px;}
         input, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter'; font-size: 14px;}
         .lang-select { width: auto; padding: 4px 8px; font-size: 11px; border-radius: 6px; background: #f1f5f9; border: none; cursor: pointer;}
@@ -50,11 +41,21 @@
         }
         .primary-btn:hover { transform: translateY(-1px); }
 
+        /* DOWNLOAD BUTTON */
         #downloadBtn {
             position: absolute; bottom: 30px; right: 30px;
             background: white; color: #334155; padding: 12px 20px; border-radius: 50px;
             font-weight: 600; font-size: 13px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             z-index: 1000; border: 1px solid #e2e8f0; display: none; cursor: pointer; align-items: center; gap: 8px;
+        }
+
+        #openBtn {
+            position: absolute; top: 20px; left: 20px;
+            background: white; padding: 12px; border-radius: 12px;
+            font-weight: 700; font-size: 20px; line-height: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 999; border: 1px solid #e2e8f0;
+            cursor: pointer; display: none; 
         }
 
         .callout {
@@ -75,7 +76,8 @@
         .ai-forecast-temp { font-size: 16px; font-weight: 600; color: #64748b; }
         .ai-insight-box { font-size: 12px; line-height: 1.4; color: #334155; padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #cbd5e1; }
         
-        .emoji-icon { font-size: 24px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .emoji-icon { font-size: 24px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .marker-pin { font-size: 30px; text-align: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); }
     </style>
 </head>
 <body>
@@ -100,7 +102,7 @@
 
     <div id="panel">
         <div class="header-row">
-            <h2 style="margin:0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V9.5</span></h2>
+            <h2 style="margin:0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V9.7</span></h2>
             <div class="header-controls">
                 <select class="lang-select" onchange="changeLanguage(this.value)">
                     <option value="en">English</option>
@@ -165,9 +167,30 @@
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
 
     <script>
-        var map = L.map('map', {zoomControl: false}).setView([1.3521, 103.94], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(map);
+        // --- MAP SETUP WITH LAYERS ---
+        var streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
+        });
+        
+        var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        });
+
+        // Initialize with Street Map by default
+        var map = L.map('map', {
+            zoomControl: false,
+            layers: [streetLayer] // Default
+        }).setView([1.3521, 103.94], 14);
+
+        // Add Layer Control (Top Right)
+        var baseMaps = {
+            "Street Map": streetLayer,
+            "Satellite": satelliteLayer
+        };
+        L.control.layers(baseMaps).addTo(map);
+        
         var routeLayer = null;
+        var markerLayer = L.layerGroup().addTo(map); // Layer for Start/End Markers
         var baseRouteData = null; 
         var lastKmlData = null; 
 
@@ -231,7 +254,7 @@
             document.getElementById("stop").value = "";
             document.getElementById("stopCoords").value = "";
             if (baseRouteData) {
-                renderResult(baseRouteData); // Uses CACHED data
+                renderResult(baseRouteData);
                 document.getElementById("status").innerText = "✅ Restored Original Route";
             } else {
                 calculateRoute(true);
@@ -262,11 +285,9 @@
             btn.innerText = "Computing...";
             status.innerText = translations[lang].status_compute;
             
-            // STRICT LAYER CLEARING
-            if (routeLayer) {
-                map.removeLayer(routeLayer);
-                routeLayer = null;
-            }
+            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+            markerLayer.clearLayers(); // CLEAR OLD MARKERS
+            
             document.getElementById("downloadBtn").style.display = "none"; 
 
             var payload = {
@@ -298,8 +319,22 @@
         }
 
         function renderResult(result) {
-            // STRICT CLEAR AGAIN (JUST IN CASE)
             if (routeLayer) map.removeLayer(routeLayer);
+            markerLayer.clearLayers(); // Ensure clear
+
+            // --- DRAW START/END MARKERS ---
+            if (result.meta) {
+                if (result.meta.start_point) {
+                    L.marker(result.meta.start_point, {
+                        icon: L.divIcon({ className: 'marker-pin', html: '🟢', iconSize: [30, 30], iconAnchor: [15, 15] })
+                    }).bindPopup("<b>Start Point</b>").addTo(markerLayer);
+                }
+                if (result.meta.end_point) {
+                    L.marker(result.meta.end_point, {
+                        icon: L.divIcon({ className: 'marker-pin', html: '🔴', iconSize: [30, 30], iconAnchor: [15, 15] })
+                    }).bindPopup("<b>Destination</b>").addTo(markerLayer);
+                }
+            }
 
             var kmlBlob = new Blob([result.kml_data], {type: "text/xml"});
             var kmlUrl = URL.createObjectURL(kmlBlob);
@@ -307,9 +342,9 @@
             var customStyle = L.geoJson(null, {
                 style: function(f) {
                     var name = f.properties.name || "";
-                    if (name.includes("Fastest")) return { color: "#ef4444", weight: 5, opacity: 0.6 };
-                    if (name.includes("Cool")) return { color: "#22c55e", weight: 6, opacity: 0.9 };
-                    return { color: "#3b82f6", weight: 4 };
+                    if (name.includes("Fastest")) return { color: "#ef4444", weight: 6, opacity: 0.8 };
+                    if (name.includes("Cool")) return { color: "#22c55e", weight: 7, opacity: 1.0 };
+                    return { color: "#3b82f6", weight: 5 };
                 },
                 pointToLayer: function(feature, latlng) {
                     var name = feature.properties.name || "";
@@ -339,14 +374,13 @@
                         document.getElementById("ai-card").style.display = "block";
                         document.getElementById("ai-temp").innerText = ai.current_temp + "°C";
                         document.getElementById("ai-forecast").innerText = ai.forecast_temp + "°C";
-                        document.getElementById("ai-insight").innerHTML = ai.insight; // Use innerHTML for formatting
+                        document.getElementById("ai-insight").innerHTML = ai.insight; 
                         
                         var borderColor = "#22c55e"; 
                         if (ai.color === "red") borderColor = "#ef4444";
                         if (ai.color === "orange") borderColor = "#f59e0b";
                         document.getElementById("ai-insight").style.borderLeftColor = borderColor;
 
-                        // SHADE BADGE
                         var badge = document.getElementById("shade-badge");
                         if (ai.shade_gain && ai.shade_gain > 5) {
                             badge.style.display = "block";
