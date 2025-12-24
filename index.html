@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoolRide V9.1: Live Now</title>
+    <title>CoolRide V9.5: Live Now</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500&family=Noto+Sans+Tamil:wght@500&display=swap" rel="stylesheet">
@@ -12,74 +12,55 @@
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
         
-        /* PANEL */
         #panel {
             position: absolute; top: 20px; left: 20px; width: 360px;
             background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(12px);
             padding: 24px; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
             z-index: 1000; border: 1px solid rgba(0,0,0,0.05);
             display: flex; flex-direction: column; gap: 12px;
-            max-height: 90vh; overflow-y: auto;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            max-height: 90vh; overflow-y: auto; transition: all 0.3s ease;
         }
 
-        /* FLOATING OPEN BUTTON (Hidden by default) */
+        /* SEARCH SUGGESTIONS */
+        datalist { display: none; }
+
+        /* BUTTONS */
         #openBtn {
             position: absolute; top: 20px; left: 20px;
-            background: white; color: #334155;
-            padding: 12px; border-radius: 12px;
+            background: white; padding: 12px; border-radius: 12px;
             font-weight: 700; font-size: 20px; line-height: 1;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 999; border: 1px solid #e2e8f0;
             cursor: pointer; display: none; 
-            transition: transform 0.1s;
         }
-        #openBtn:hover { transform: scale(1.05); color: #2563eb; }
-
-        /* HEADER CONTROLS */
+        
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .header-controls { display: flex; gap: 8px; align-items: center; }
-        
-        /* Close Button */
-        .close-btn { 
-            cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 18px; 
-            padding: 4px 8px; border-radius: 6px; transition: background 0.2s;
-        }
+        .close-btn { cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 18px; padding: 4px 8px; border-radius: 6px;}
         .close-btn:hover { background: #f1f5f9; color: #ef4444; }
 
-        /* TYPOGRAPHY & INPUTS */
         label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: -8px;}
         input, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter'; font-size: 14px;}
         .lang-select { width: auto; padding: 4px 8px; font-size: 11px; border-radius: 6px; background: #f1f5f9; border: none; cursor: pointer;}
         
-        /* BUTTONS */
         .primary-btn { 
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             color: white; border: none; padding: 14px; border-radius: 8px; 
-            cursor: pointer; font-weight: 600; transition: transform 0.1s;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
         .primary-btn:hover { transform: translateY(-1px); }
 
-        /* DOWNLOAD BUTTON */
         #downloadBtn {
             position: absolute; bottom: 30px; right: 30px;
-            background: white; color: #334155;
-            padding: 12px 20px; border-radius: 50px;
-            font-weight: 600; font-size: 13px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 1000; border: 1px solid #e2e8f0;
-            display: none; cursor: pointer; align-items: center; gap: 8px;
-            transition: all 0.2s;
+            background: white; color: #334155; padding: 12px 20px; border-radius: 50px;
+            font-weight: 600; font-size: 13px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000; border: 1px solid #e2e8f0; display: none; cursor: pointer; align-items: center; gap: 8px;
         }
-        #downloadBtn:hover { transform: translateY(-2px); }
 
-        /* CALLOUT & STOP BOX */
         .callout {
             background: #eff6ff; border-left: 4px solid #3b82f6;
             padding: 10px; border-radius: 4px; font-size: 12px;
-            color: #1e40af; margin-bottom: 5px;
-            display: flex; justify-content: space-between; align-items: flex-start;
+            color: #1e40af; margin-bottom: 5px; display: flex; justify-content: space-between;
         }
         .stop-container { display: none; background: #fff1f2; padding: 10px; border-radius: 8px; border: 1px dashed #f43f5e; }
         .stop-label { font-size: 11px; color: #be123c; font-weight: 700; display: flex; justify-content: space-between; }
@@ -94,18 +75,32 @@
         .ai-forecast-temp { font-size: 16px; font-weight: 600; color: #64748b; }
         .ai-insight-box { font-size: 12px; line-height: 1.4; color: #334155; padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #cbd5e1; }
         
-        /* EMOJI MARKERS */
         .emoji-icon { font-size: 24px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
     </style>
 </head>
 <body>
 
+    <datalist id="sg-locations">
+        <option value="Tampines MRT">
+        <option value="Tampines Eco Green">
+        <option value="Bedok Reservoir">
+        <option value="Bedok Mall">
+        <option value="Changi Airport">
+        <option value="Marina Bay Sands">
+        <option value="Gardens by the Bay">
+        <option value="East Coast Park">
+        <option value="Punggol Waterway">
+        <option value="Jurong Lake Gardens">
+        <option value="Botanic Gardens">
+        <option value="National University of Singapore">
+        <option value="Nanyang Technological University">
+    </datalist>
+
     <button id="openBtn" onclick="togglePanel()" title="Open Controls">☰</button>
 
     <div id="panel">
         <div class="header-row">
-            <h2 style="margin:0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V9.1</span></h2>
-            
+            <h2 style="margin:0;">🚴 CoolRide <span style="font-size:12px;color:white;background:#22c55e;padding:2px 6px;border-radius:10px;">V9.5</span></h2>
             <div class="header-controls">
                 <select class="lang-select" onchange="changeLanguage(this.value)">
                     <option value="en">English</option>
@@ -124,7 +119,7 @@
         <input type="text" id="apiUrl" placeholder="🔌 Paste Ngrok URL Here" style="font-family:monospace; font-size:11px; background:#f8fafc;">
         
         <label data-lang="start">📍 Start Point</label>
-        <input type="text" id="start" value="Tampines MRT">
+        <input type="text" id="start" value="Tampines MRT" list="sg-locations">
         
         <div id="stopBox" class="stop-container">
             <div class="stop-label"><span data-lang="added_stop">🛑 ADDED STOP</span> <span class="remove-stop" onclick="removeStop()">✕ Remove</span></div>
@@ -133,7 +128,7 @@
         </div>
 
         <label data-lang="dest">🎯 Destination</label>
-        <input type="text" id="end" value="Tampines Eco Green">
+        <input type="text" id="end" value="Tampines Eco Green" list="sg-locations">
         
         <label data-lang="time">⏰ Departure Time</label>
         <input type="time" id="time" value="14:00">
@@ -152,6 +147,9 @@
                     <div class="ai-forecast-temp" id="ai-forecast">--°C</div>
                     <div class="ai-sub-text" data-lang="ai_predict">Predicted (1h)</div>
                 </div>
+            </div>
+            <div id="shade-badge" style="display:none; background:#dcfce7; color:#166534; padding:5px; font-size:11px; font-weight:700; text-align:center; border-radius:4px; margin-bottom:8px;">
+                🛡️ +25% More Shade on Cool Route
             </div>
             <div id="ai-insight" class="ai-insight-box">AI analysis will appear here...</div>
         </div>
@@ -173,20 +171,16 @@
         var baseRouteData = null; 
         var lastKmlData = null; 
 
-        // --- UI TOGGLE LOGIC ---
         function togglePanel() {
             var panel = document.getElementById("panel");
             var openBtn = document.getElementById("openBtn");
             if (panel.style.display === "none") {
-                panel.style.display = "flex";
-                openBtn.style.display = "none";
+                panel.style.display = "flex"; openBtn.style.display = "none";
             } else {
-                panel.style.display = "none";
-                openBtn.style.display = "block";
+                panel.style.display = "none"; openBtn.style.display = "block";
             }
         }
 
-        // --- TRANSLATION LOGIC ---
         const translations = {
             en: {
                 start: "📍 Start Point", dest: "🎯 Destination", time: "⏰ Departure Time",
@@ -219,7 +213,6 @@
             });
         }
 
-        // --- APP LOGIC ---
         var savedUrl = localStorage.getItem("coolride_api_url");
         if (savedUrl) document.getElementById("apiUrl").value = savedUrl;
         document.getElementById("apiUrl").addEventListener("input", function() {
@@ -238,7 +231,7 @@
             document.getElementById("stop").value = "";
             document.getElementById("stopCoords").value = "";
             if (baseRouteData) {
-                renderResult(baseRouteData);
+                renderResult(baseRouteData); // Uses CACHED data
                 document.getElementById("status").innerText = "✅ Restored Original Route";
             } else {
                 calculateRoute(true);
@@ -269,7 +262,11 @@
             btn.innerText = "Computing...";
             status.innerText = translations[lang].status_compute;
             
-            if (routeLayer) map.removeLayer(routeLayer);
+            // STRICT LAYER CLEARING
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+                routeLayer = null;
+            }
             document.getElementById("downloadBtn").style.display = "none"; 
 
             var payload = {
@@ -301,6 +298,9 @@
         }
 
         function renderResult(result) {
+            // STRICT CLEAR AGAIN (JUST IN CASE)
+            if (routeLayer) map.removeLayer(routeLayer);
+
             var kmlBlob = new Blob([result.kml_data], {type: "text/xml"});
             var kmlUrl = URL.createObjectURL(kmlBlob);
 
@@ -339,12 +339,21 @@
                         document.getElementById("ai-card").style.display = "block";
                         document.getElementById("ai-temp").innerText = ai.current_temp + "°C";
                         document.getElementById("ai-forecast").innerText = ai.forecast_temp + "°C";
-                        var insightBox = document.getElementById("ai-insight");
-                        insightBox.innerText = ai.insight;
+                        document.getElementById("ai-insight").innerHTML = ai.insight; // Use innerHTML for formatting
+                        
                         var borderColor = "#22c55e"; 
                         if (ai.color === "red") borderColor = "#ef4444";
                         if (ai.color === "orange") borderColor = "#f59e0b";
-                        insightBox.style.borderLeftColor = borderColor;
+                        document.getElementById("ai-insight").style.borderLeftColor = borderColor;
+
+                        // SHADE BADGE
+                        var badge = document.getElementById("shade-badge");
+                        if (ai.shade_gain && ai.shade_gain > 5) {
+                            badge.style.display = "block";
+                            badge.innerText = "🛡️ " + ai.shade_gain + "% More Shade on Cool Route";
+                        } else {
+                            badge.style.display = "none";
+                        }
                     }
                     
                     var duration = result.meta ? result.meta.duration : "Cached";
