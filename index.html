@@ -299,7 +299,12 @@
 
             try {
                 let response = await fetch(url + "/calculate_route", {
-                    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true"
+                    },
+                    body: JSON.stringify(payload)
                 });
                 let result = await response.json();
 
